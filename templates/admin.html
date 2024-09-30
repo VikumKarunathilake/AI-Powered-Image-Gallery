@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Page</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .gallery {
+            column-count: 3;
+            column-gap: 20px;
+            padding: 60px 20px;
+        }
+
+        .gallery div {
+            break-inside: avoid;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .gallery img {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            display: block;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .gallery img:hover {
+            transform: scale(1.05);
+            opacity: 0.85;
+        }
+
+        .image-item {
+            break-inside: avoid;
+            margin-bottom: 20px;
+            overflow: hidden;
+            background: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 10px;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .pagination li {
+            margin: 0 5px;
+        }
+
+        @keyframes fadeInUp {
+            0% {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .feature-box {
+            opacity: 0;
+            animation: fadeInUp 1s ease forwards;
+        }
+
+        .feature-box:nth-child(1) {
+            animation-delay: 0.2s;
+        }
+
+        .feature-box:nth-child(2) {
+            animation-delay: 0.4s;
+        }
+
+        .feature-box:nth-child(3) {
+            animation-delay: 0.6s;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand" href="/">GOL</a>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/gallery">Gallery</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="gallery">
+        {% for image in images %}
+        <div class="image-item">
+            <img src="{{ image[4] | replace('.jpg', '.webp') }}" alt="{{ image[2] }}" loading="lazy">
+            <br><br>
+            <p class="card-text">Status: {% if not image[7] %}Not Approved{% else %}Approved{% endif %}</p>
+
+            <!-- Form to approve the image -->
+            <form method="POST" action="{{ url_for('admin') }}">
+                <input type="hidden" name="image_id" value="{{ image[0] }}">
+                <input type="hidden" name="action" value="approve">
+                <button type="submit" class="btn btn-success">Approve</button>
+            </form>
+
+            <!-- Form to delete the image -->
+            <form method="POST" action="{{ url_for('admin') }}"
+                onsubmit="return confirm('Are you sure you want to delete this image?');">
+                <input type="hidden" name="image_id" value="{{ image[0] }}">
+                <input type="hidden" name="action" value="delete">
+                <button type="submit" class="btn btn-danger">Delete</button>
+            </form>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination controls -->
+    <nav aria-label="Page navigation" class="pagination">
+        <ul class="pagination">
+            {% if page > 1 %}
+            <li class="page-item"><a class="page-link" href="{{ url_for('admin', page=page-1) }}">Previous</a></li>
+            {% endif %}
+            {% for p in range(1, total_pages + 1) %}
+            <li class="page-item {% if p == page %}active{% endif %}"><a class="page-link"
+                    href="{{ url_for('admin', page=p) }}">{{ p }}</a></li>
+            {% endfor %}
+            {% if page < total_pages %} <li class="page-item"><a class="page-link"
+                    href="{{ url_for('admin', page=page+1) }}">Next</a></li>
+                {% endif %}
+        </ul>
+    </nav>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.0.7/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+
+</html>
