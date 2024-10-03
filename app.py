@@ -5,11 +5,11 @@ from datetime import datetime
 import os
 
 app = Flask(__name__)
-app.secret_key = os.getenv('FLASK_SECRET_KEY')
+app.secret_key = '1c0cfafbc3b38275b41eaede7244b64755ab2dd0b60edc63'
 # csrf = CSRFProtect(app)
 
 def get_db_connection():
-    conn_string = os.getenv('DATABASE_URL')
+    conn_string = 'postgresql://img-gallery-db_owner:rCeoz7t8MAvg@ep-weathered-thunder-a16l4t7z.ap-southeast-1.aws.neon.tech/img-gallery-db?sslmode=require'
     if conn_string is None:
         raise Exception("Database connection string not found.")
     try:
