@@ -4,123 +4,258 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Gallery</title>
-
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
-
+    <title>GOL Image Gallery</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        html {
-            scroll-behavior: smooth;
+        body {
+            background-color: #1a1a1a;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
         }
 
-        .gallery {
-            column-count: 3;
-            column-gap: 20px;
-            padding: 60px 20px;
+        .navbar {
+            background-color: #2a2a2a;
         }
 
-        .gallery div {
-            break-inside: avoid;
-            margin-bottom: 20px;
+        .navbar-brand,
+        .nav-link {
+            color: #ffffff !important;
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 16px;
+            padding: 16px;
+        }
+
+        .gallery-item {
             position: relative;
-            /* For captions */
-        }
-
-        .gallery img {
-            width: 100%;
-            height: auto;
+            overflow: hidden;
             border-radius: 8px;
-            display: block;
-            transition: transform 0.3s ease, opacity 0.3s ease;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
         }
 
-        .gallery img:hover {
+        .gallery-item:hover {
             transform: scale(1.05);
-            opacity: 0.85;
         }
 
-        /* Pagination Highlight */
-        .pagination .page-item.active .page-link {
-            background-color: #333;
-            border-color: #333;
+        .gallery-item img {
+            width: 100%;
+            height: 350px;
+            object-fit: cover;
         }
 
-        /* Responsive Design */
-        @media (min-width: 1200px) {
-            .gallery {
-                column-count: 3;
-            }
+        .image-info {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
 
-        @media (max-width: 1200px) and (min-width: 768px) {
-            .gallery {
-                column-count: 2;
-            }
+        .gallery-item:hover .image-info {
+            opacity: 1;
         }
 
-        @media (max-width: 768px) {
-            .gallery {
-                column-count: 1;
-            }
+        .image-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .image-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8em;
+        }
+
+        .pagination {
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .page-link {
+            color: #ffffff;
+            background-color: #2a2a2a;
+            border-color: #444;
+        }
+
+        .page-link:hover {
+            color: #ffffff;
+            background-color: #444;
+        }
+
+        .modal-content {
+            background-color: #2a2a2a;
+            color: #ffffff;
+        }
+
+        .modal-header,
+        .modal-footer {
+            border-color: #444;
+        }
+
+        .modal-body img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .modal-backdrop.show {
+            opacity: 0.8;
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+
+        /* Custom modal animations */
+        .modal.fade .modal-dialog {
+            transform: translate(0, -50px);
+            transition: transform 0.3s ease-out;
+        }
+
+        .modal.show .modal-dialog {
+            transform: translate(0, 0);
+        }
+
+        /* Image and modal info styling */
+        .modal-body {
+            padding: 2rem;
+            background-color: #f8f9fa;
+        }
+
+        .modal-info p {
+            font-size: 1.1rem;
+            color: #555;
+        }
+
+        .modal-footer {
+            background-color: #f8f9fa;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+            border-color: #004085;
         }
     </style>
 </head>
 
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <div class="container">
-            <a class="navbar-brand" href="/">GOL</a>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" href="/gallery">Gallery</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
 
-    <div class="container my-5">
-        <center>
-            <h2 class="mb-4">Image Gallery</h2>
-            <div class="gallery">
-                {% for image in images %}
-                <div>
-                    <img src="{{ image[5] | replace('.jpg', '.webp') }}" alt="{{ image[2] }}" loading="lazy"
-                        width="{{ image[6] }}" height="{{ image[7] }}">
-                </div>
+
+    <div class="container-fluid">
+        <h1 class="text-center my-4">Image Gallery</h1>
+        <nav aria-label="Page navigation">
+            <ul class="pagination">
+                {% for p in range(1, (total_images // per_page) + 2) %}
+                <li class="page-item {% if p == page %}active{% endif %}">
+                    <a class="page-link" href="{{ url_for('gallery', page=p) }}">{{ p }}</a>
+                </li>
                 {% endfor %}
-
+            </ul>
+        </nav>
+        <div class="gallery-grid">
+            {% for image in images %}
+            <div class="gallery-item" data-bs-toggle="modal" data-bs-target="#imageModal"
+                data-filename="{{ image[11] }}" data-filesize="{{ image[8] }}"
+                data-resolution="{{ image[6] }}x{{ image[7] }}" data-url="{{ image[5] | replace('.jpg', '.webp') }}"
+                data-title="{{ image[2] }}">
+                <img src="{{ image[5] | replace('.jpg', '.webp') }}" alt="{{ image[2] }}" loading="lazy">
+                <div class="image-info">
+                    <div class="image-title">{{ image[2] }}</div>
+                    <div class="image-stats">
+                        <span>👍 {{ image[6] }}</span>
+                        <span>👁️ {{ image[7] }}</span>
+                        <span>💬 {{ image[8] }}</span>
+                    </div>
+                </div>
             </div>
-            <center>
-                <nav aria-label="Page navigation" class="mt-4">
-                    <ul class="pagination justify-content-center">
-                        {% for p in range(1, (total_images // per_page) + 2) %}
-                        <li class="page-item {% if p == page %}active{% endif %}">
-                            <a class="page-link" href="{{ url_for('gallery', page=p) }}">{{ p }}</a>
-                        </li>
-                        {% endfor %}
-                    </ul>
-                </nav>
-    </div>
-    <footer id="contact">
-        <div class="container">
-            <p>Contact me <a href="https://discord.com/users/781158548364853270">Discord</a></p>
-            <p>&copy; 2024 GOL Image Gallery. All rights reserved.</p>
+            {% endfor %}
         </div>
+
+        <!-- ... (pagination code remains the same) ... -->
+    </div>
+
+    <!-- Image Modal -->
+    <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="imageModalLabel">Image Preview</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img src="" alt="Full size image" id="modalImage" class="img-fluid mb-3 rounded shadow-lg"
+                        style="max-height: 60vh;">
+                    <div class="modal-info mt-3">
+                        <p><strong>File Name:</strong> <span id="fileName"></span></p>
+                        <p><strong>File Size:</strong> <span id="fileSize"></span></p>
+                        <p><strong>Resolution:</strong> <span id="resolution"></span></p>
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <a href="#" class="btn btn-primary btn-lg shadow-sm" id="downloadBtn" download>
+                        <i class="bi bi-download"></i> Download Image
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <nav aria-label="Page navigation">
+        <ul class="pagination">
+            {% for p in range(1, (total_images // per_page) + 2) %}
+            <li class="page-item {% if p == page %}active{% endif %}">
+                <a class="page-link" href="{{ url_for('gallery', page=p) }}">{{ p }}</a>
+            </li>
+            {% endfor %}
+        </ul>
+    </nav>
+    <footer class="text-center py-4">
+        <p>© 2024 GOL Image Gallery. All rights reserved.</p>
     </footer>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        document.querySelectorAll('.page-link').forEach(link => {
-            link.addEventListener('click', function () {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+        document.addEventListener('DOMContentLoaded', function () {
+            var imageModal = document.getElementById('imageModal');
+            imageModal.addEventListener('show.bs.modal', function (event) {
+                var button = event.relatedTarget;
+                var filename = button.getAttribute('data-filename');
+                var filesize = button.getAttribute('data-filesize');
+                var resolution = button.getAttribute('data-resolution');
+                var url = button.getAttribute('data-url');
+                var title = button.getAttribute('data-title');
+
+                var modalTitle = imageModal.querySelector('.modal-title');
+                var modalImage = document.getElementById('modalImage');
+                var fileNameSpan = document.getElementById('fileName');
+                var fileSizeSpan = document.getElementById('fileSize');
+                var resolutionSpan = document.getElementById('resolution');
+                var downloadBtn = document.getElementById('downloadBtn');
+
+                modalTitle.textContent = title;
+                modalImage.src = url;
+                modalImage.alt = title;
+                fileNameSpan.textContent = filename;
+                fileSizeSpan.textContent = formatFileSize(filesize);
+                resolutionSpan.textContent = resolution;
+                downloadBtn.href = url;
+                downloadBtn.download = filename;
             });
         });
 
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' bytes';
+            else if (bytes < 1048576) return (bytes / 1024).toFixed(2) + ' KB';
+            else if (bytes < 1073741824) return (bytes / 1048576).toFixed(2) + ' MB';
+            else return (bytes / 1073741824).toFixed(2) + ' GB';
+        }
     </script>
 </body>
 

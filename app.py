@@ -36,7 +36,6 @@ def index():
 
 @app.route('/gallery')
 def gallery():
-    # Pagination logic
     page = request.args.get('page', 1, type=int)
     per_page = 12  # Number of images per page
     offset = (page - 1) * per_page
@@ -45,15 +44,26 @@ def gallery():
         conn = get_db_connection()
         cur = conn.cursor()
         cur.execute('SELECT COUNT(*) FROM images WHERE approved = TRUE;')
-        total_images = cur.fetchone()[0]  # Get total count of images
+        total_images = cur.fetchone()[0]
 
-        cur.execute('SELECT * FROM images WHERE approved = TRUE ORDER BY id LIMIT %s OFFSET %s;', (per_page, offset))
+        cur.execute('''
+            SELECT id, img_id, title, url_viewer, url, display_url, 
+                   width, height, size, upload_time, expiration,
+                   filename, mime_type,
+                   (SELECT COUNT(*) FROM likes WHERE image_id = images.id) as likes,
+                   (SELECT COUNT(*) FROM views WHERE image_id = images.id) as views,
+                   (SELECT COUNT(*) FROM comments WHERE image_id = images.id) as comments
+            FROM images 
+            WHERE approved = TRUE 
+            ORDER BY upload_time DESC 
+            LIMIT %s OFFSET %s;
+        ''', (per_page, offset))
         paginated_images = cur.fetchall()
 
         cur.close()
         conn.close()
     except Exception as e:
-        print(f"Error: {e}")  # Debugging line
+        print(f"Error: {e}")
         abort(500, description="An error occurred while accessing the database.")
 
     return render_template('gallery.html', images=paginated_images, page=page,
